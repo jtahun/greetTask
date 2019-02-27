@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:mvc="http://www.springframework.org/schema/mvc"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xmlns:tx="http://www.springframework.org/schema/tx" xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	   xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd">
+
+<mvc:annotation-driven />
+
+<context:component-scan base-package="kz.github.igorz" />
+
+<bean id="viewResolver"
+	  class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+	<property name="viewClass"
+			  value="org.springframework.web.servlet.view.JstlView" />
+	<property name="prefix" value="/WEB-INF/jsp/" />
+	<property name="suffix" value=".jsp" />
+</bean>
+
+<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+	<property name="basename" value="jdbc" />
+</bean>
+
+<bean id="dataSource" class="org.h2.jdbcx.JdbcDataSource">
+	<property name="url" value="jdbc:h2:file:C:/java/db/exec"/> <!--?autoReconnect=true&amp;createDatabaseIfNotExist=true&amp;" /-->
+	<property name="user" value="sa" />
+	<property name="password" value="" />
+</bean>
+
+<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+	<property name="dataSource" ref="dataSource" />
+	<property name="typeAliasesPackage" value="kz.github.igorz.model"/>
+	<property name="mapperLocations" value="classpath*:kz/github/igorz/mappers/*.xml" />
+</bean>
+
+<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+	<constructor-arg index="0" ref="sqlSessionFactory" />
+</bean>
+
+<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+	<property name="basePackage" value="kz.github.igorz.mappers" />
+</bean>
+
+
+
+<tx:annotation-driven transaction-manager="transactionManager" />
+<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+	<property name="dataSource" ref="dataSource" />
+</bean>
+
+<bean class="org.springframework.jdbc.datasource.init.DataSourceInitializer" id="dataSourceInitializer">
+	<property name="databasePopulator" ref="resourceDatabasePopulator"/>
+	<property name="dataSource" ref="dataSource"/>
+</bean>
+
+<bean id="resourceDatabasePopulator"
+  class="org.springframework.jdbc.datasource.init.ResourceDatabasePopulator">
+	<property name="scripts">
+		<array>
+			<value>classpath:database/create.sql</value>
+			<value>classpath:database/setupdb.sql</value>
+		</array>
+	</property>
+</bean>
+
+<bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"
+	  depends-on="dataSourceInitializer"/>
+
+</beans>
